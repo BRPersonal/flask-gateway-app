@@ -6,6 +6,8 @@ class ApiResponse:
         # Ensure that either message or error is provided
         if message is None and error is None:
             raise ValueError("Either 'message' or 'error' must be provided.")
+        elif message is not None and error is not None:
+            raise ValueError("Both 'message' and 'error' cannot be set.")
 
         self.message = message
         self.error = error
@@ -60,4 +62,4 @@ if __name__ == "__main__":
     print(api_response_error)
 
     # Uncommenting the following line will raise a ValueError
-    #api_response_invalid = ApiResponse()
+    #api_response_invalid = ApiResponse("","")
