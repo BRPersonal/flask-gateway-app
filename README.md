@@ -11,5 +11,15 @@ specified in .env file in this application folder
 5)Make sure TYK_GW_SECRET environment set in docker-compose.yml matches X-TYK-AUTHORIZATION
 specified in .env file in this application folder
 
+What you define specific  for an api?
+-----------------
+api_id,org_id,name,listen_path,target_url
+Other details just use the defaults
+
+What you define specific for a policy?
+---------------------------
+access_rights,org_id,id,name,per,quota_max,quota_renewal_rate,rate
+Other details just use the defaults
+
  
 
