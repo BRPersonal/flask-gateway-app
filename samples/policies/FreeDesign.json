@@ -1,0 +1,74 @@
+{
+  "access_rights": {
+    "json-post": {
+      "allowed_urls": null,
+      "api_id": "json-post",
+      "api_name": "JsonPost",
+      "limit": {
+        "rate": 0,
+        "per": 0,
+        "throttle_interval": 0,
+        "throttle_retry_limit": 0,
+        "max_query_depth": 0,
+        "quota_max": 0,
+        "quota_renews": 0,
+        "quota_remaining": 0,
+        "quota_renewal_rate": 0,
+        "smoothing": null
+      },      
+      "disable_introspection": false,
+      "versions": [
+        "Default"
+      ]
+    },
+    "json-comment": {
+      "allowed_urls": null,
+      "api_id": "json-comment",
+      "api_name": "JsonComment",
+      "limit": {
+        "rate": 0,
+        "per": 0,
+        "throttle_interval": 0,
+        "throttle_retry_limit": 0,
+        "max_query_depth": 0,
+        "quota_max": 0,
+        "quota_renews": 0,
+        "quota_remaining": 0,
+        "quota_renewal_rate": 0,
+        "smoothing": null
+      },      
+      "disable_introspection": false,
+      "versions": [
+        "Default"
+      ]
+    }    
+  },
+  "org_id": "FleetStudio",
+  "active": true,
+  "hmac_enabled": false,
+  "id": "FreeDesign",
+  "is_inactive": false,
+  "key_expires_in": 2592000,
+  "max_query_depth": -1,
+  "meta_data": {
+    "update": "sample policy update",
+    "user_type": "mobile_user"
+  },
+  "name": "Free Design",
+  "partitions": {
+    "acl": true,
+    "complexity": false,
+    "per_api": false,
+    "quota": true,
+    "rate_limit": true
+  },
+  "per": 60,
+  "quota_max": 10,
+  "quota_renewal_rate": 86400,
+  "rate": 5,
+  "tags": [
+    "security"
+  ],
+  "throttle_interval": 0,
+  "throttle_retry_limit": 0
+}

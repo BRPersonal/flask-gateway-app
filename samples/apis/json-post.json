@@ -1,0 +1,26 @@
+{
+  "api_id": "json-post",
+  "auth": {
+    "auth_header_name": "Authorization"
+  },
+  "definition": {
+    "key": "version",
+    "location": "header"
+  },
+  "name": "JsonPost",
+  "org_id": "FleetStudio",
+  "proxy": {
+    "listen_path": "/posts/",
+    "strip_listen_path": true,
+    "target_url": "https://jsonplaceholder.typicode.com/posts"
+  },
+  "use_oauth2": false,
+  "version_data": {
+    "not_versioned": true,
+    "versions": {
+      "Default": {
+        "name": "Default"
+      }
+    }
+  }
+}

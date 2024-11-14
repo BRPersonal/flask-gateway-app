@@ -28,8 +28,8 @@ Setting up Tyk Open source APi Gateway in local machine
 $ git clone https://github.com/TykTechnologies/tyk-gateway-docker
 $ cd tyk-gateway-docker
 
-put your api definition json files in apps folder
-put your policy definition json files in policies folder
+put your api definition json files in apps folder (refer samples/apis folder)
+put your policy definition json files in policies folder (refer samples/policies)
 
 $ docker-compose up -d
 
@@ -43,5 +43,45 @@ $ docker-compose stop
 Note: If you run the command
 $ docker-compose down 
 the api keys created will be lost. Dont use it. Use stop / start command instead
+
+
+Api Demo
+---------
+POST {{base_url}}/create-key
+Body raw
+{
+    "plan":"FreeDesign"
+}
+
+POST {{base_url}}/create-key
+Body raw
+{
+    "plan":"FreeDeveloper"
+}
+
+GET {{base_url}}/list-keys
+GET {{base_url}}/get-key/FleetStudio68031d2590614c30a940d5c43af07d5f
+DELETE {{base_url}}/delete-key/FleetStudio38656e51f71648498f4cccc956c6826c
+
+
+PUT {{base_url}}/update-plan
+Body raw
+{
+    "plan":"FreeDeveloper",
+    "key":"FleetStudio6d1c21956aee463da152259e3f707cc8"
+}
+
+Apis that can be accessed through Tyk Gateway. You can test RateLimiting and Quota limit as well
+http://localhost:8080/posts/
+http://localhost:8080/comments/
+When you exceed rate limit you will get http status 429 (Too many requests)
+When you exceed quota limit you will get http status 403(Forbidden)
+
+You need to set "Authorization" header as api key that you created.
+In postman, you can also goto Authorization tab, choose "API Key" for AuthType
+and set value as api key
+
+
+
 
 
