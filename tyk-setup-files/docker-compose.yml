@@ -2,6 +2,7 @@ version: '3.3'
 services:
   tyk-gateway:
     image: docker.tyk.io/tyk-gateway/tyk-gateway:v5.5.0
+    container_name: tyk-gateway
     ports:
       - 8080:8080
     networks:
@@ -18,6 +19,7 @@ services:
       - tyk-redis
   tyk-redis:
     image: redis:6.2.7-alpine
+    container_name: tyk-redis
     networks:
       - tyk
     ports:
