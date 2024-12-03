@@ -1,5 +1,5 @@
 from flask import Flask,request,jsonify,Response
-from service import create_key,list_keys,get_key_details,update_key_plan,delete_key
+from service import create_key, list_keys, get_key_details, update_key_plan, delete_key, get_analytics
 
 from api_response import ApiResponse
 
@@ -50,6 +50,29 @@ def updateKeyPlan() -> (Response,str):
 def keyDeletion(key: str) -> (Response,str):
     result = delete_key(key)
     return jsonify(result), result['status_code']
+
+@app.route('/analytics', methods=['GET'])
+def getAnalytics() -> (Response,str):
+
+    group_by = request.args.get('group_by', default="ref_app")  # ref_app if not provided
+
+    start_date_str = request.args.get('start_date')  # Required parameter
+    end_date_str = request.args.get('end_date')  # Required parameter
+
+    if not start_date_str:
+        api_response = ApiResponse(error="Missing 'start_date' in request parameter",
+                                   statuscode=400)
+        result = api_response.to_json()
+    elif not end_date_str:
+        api_response = ApiResponse(error="Missing 'end_date' in request parameter",
+                                   statuscode=400)
+        result = api_response.to_json()
+    else:
+        result = get_analytics(group_by,start_date_str,end_date_str)
+
+    return jsonify(result), result['status_code']
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
