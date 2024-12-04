@@ -81,7 +81,15 @@ You need to set "Authorization" header as api key that you created.
 In postman, you can also goto Authorization tab, choose "API Key" for AuthType
 and set value as api key
 
+04-Dec-24
+--------
+key_tbl will be dropped from Postgre database . So query in 
+analytics_repository will work only in local mysql. It will no longer 
+work for postgre. The table was added by me for making testing easier.
+It has to be dropped in production. product should only use Key table
 
+Key is a reserved word and has to be handled differently in mysql
+and postgre. That's the reason I went for this new table
 
 
 
