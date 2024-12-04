@@ -192,9 +192,15 @@ def get_analytics(group_by:str, start_date_str:str, end_date_str:str) -> dict:
     group_by_column_names = ["request_date", "ref_app"]
     analytics_data = get_request_counts(group_by_column_names,start_date_str,end_date_str,None)
 
-    api_response = ApiResponse(message="Success",
-                               response = json.loads(json.dumps(analytics_data, indent=4)),
-                               statuscode="200")
+    if analytics_data:
+        api_response = ApiResponse(message="Success",
+                                   response = json.loads(json.dumps(analytics_data, indent=4)),
+                                   statuscode="200")
+    else:
+        api_response = ApiResponse(message="No Data Found",
+                                   response=None,
+                                   statuscode="200")
+
 
     print("api_response=\n", api_response.to_dictionary())
 
