@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from api_response import ApiResponse
 from utils import get_current_timestamp
-from analytics_repository import get_request_counts
+from analytics_repository import get_analytics_data
 
 load_dotenv()
 
@@ -189,8 +189,7 @@ def delete_key(key:str) -> dict:
 def get_analytics(group_by:str, start_date_str:str, end_date_str:str) -> dict:
     print(f"groupBy={group_by},stDate={start_date_str},endDate={end_date_str}")
 
-    group_by_column_names = ["request_date", "ref_app"]
-    analytics_data = get_request_counts(group_by_column_names,start_date_str,end_date_str,None)
+    analytics_data = get_analytics_data(group_by, start_date_str, end_date_str, None)
 
     if analytics_data:
         api_response = ApiResponse(message="Success",

@@ -32,7 +32,32 @@ def execute_sql_query(query : str) -> DataFrame:
     engine = create_engine(db_url)
     return pd.read_sql_query(query, engine)
 
-def get_analytics_data(data_frame:DataFrame ) -> dict:
+def insert_missing_rows(data_frame:DataFrame,group_by_column:str ) -> DataFrame:
+
+    #Get unique request dates
+    unique_dates = data_frame['request_date'].unique()
+
+    #Get unique values for group_by_column
+    unique_groups = data_frame[group_by_column].unique()
+
+    #create a list to hold new rows
+    new_rows = []
+    # Loop through each unique request date and check for each unique group
+    for dt in unique_dates:
+        for grp in unique_groups:
+            # Check if the combination exists
+            if not ((data_frame['request_date'] == dt) & (data_frame[group_by_column] == grp)).any():
+                # Insert a new row with cntr as 0
+                new_rows.append({'request_date': dt, group_by_column: grp, 'cntr': 0})
+
+    if new_rows:
+        new_df = pd.DataFrame(new_rows)
+        return pd.concat([data_frame, new_df], ignore_index=True)
+
+    return data_frame  #return original if no new changes
+
+#This function is intended to be private to this module
+def _get_analytics_data(data_frame:DataFrame,group_by_column:str ) -> dict:
 
     # Calculate total_requests and average_daily_requests
     total_requests = int(data_frame['cntr'].sum())
@@ -46,11 +71,11 @@ def get_analytics_data(data_frame:DataFrame ) -> dict:
         "trend": []
     }
 
-    # Group by ref_app and create trend data
-    for app in data_frame['ref_app'].unique():
+    # Group by given column and create trend data
+    for app in data_frame[group_by_column].unique():
         trend_data = {
             "group": app,
-            "data": data_frame[data_frame['ref_app'] == app]['cntr'].tolist()
+            "data": data_frame[data_frame[group_by_column] == app]['cntr'].tolist()
         }
         analytics_data["trend"].append(trend_data)
 
@@ -67,9 +92,10 @@ def get_analytics_data(data_frame:DataFrame ) -> dict:
 
     return final_result
 
-def get_request_counts(group_by_column_names: list[str],
-                       start_date_str: str, end_date_str: str,
-                       user_id: int | None) -> dict:
+def get_analytics_data(group_by_column: str,
+                        start_date_str: str, end_date_str: str,
+                        user_id: int | None) -> dict:
+    group_by_column_names = ["request_date"] + [group_by_column]
 
     # Step 1: Execute the SQL query with dynamic date parameters
     if user_id:
@@ -80,14 +106,13 @@ def get_request_counts(group_by_column_names: list[str],
     query = f"""
     SELECT
         a.request_date,
-        b.ref_app,
-        b.user_id,
+        b.{group_by_column},
         COUNT(*) AS cntr
     FROM tyk_analytics_data a, key_tbl b
     WHERE a.request_date BETWEEN '{start_date_str}' AND '{end_date_str}'
     {user_id_filter}
     and b.value = a.api_key
-    GROUP BY a.request_date, b.ref_app, b.user_id;
+    GROUP BY a.request_date, b.{group_by_column};
     """
 
     # Fetch data from database into a DataFrame
@@ -104,15 +129,23 @@ def get_request_counts(group_by_column_names: list[str],
     grouped_df['request_date'] = grouped_df['request_date'].astype(str)
     print("grouped_df=\n", grouped_df)
 
-    analytics_data = get_analytics_data(grouped_df)
+    #remove specific row and see how results appear
+    trimmed_df = grouped_df[~((grouped_df['request_date'] == '2024-12-03') & (grouped_df[group_by_column] == 'freeDesign'))]
+    print("trimmed_df after delete=\n", trimmed_df)
+
+    trimmed_df = insert_missing_rows(trimmed_df,group_by_column)
+    print("trimmed_df after insert=\n", trimmed_df)
+
+    analytics_data = _get_analytics_data(trimmed_df, group_by_column)
 
     return analytics_data
 
 if __name__ == "__main__":
 
-    group_by_column_names = ["request_date", "ref_app"]
-    analytics_data = get_request_counts(group_by_column_names,"2024-12-01","2024-12-03",None)
-    print("analytics_data=\n", json.dumps(analytics_data, indent=4))
+    group_by_column_name = "tier";
+    #group_by_column_name = "ref_app";
+    result = get_analytics_data(group_by_column_name, "2024-12-01", "2024-12-03", None)
+    print("analytics_data=\n", json.dumps(result, indent=4))
 
 
 
