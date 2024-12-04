@@ -1,9 +1,10 @@
+import json
 import os
-from datetime import date, datetime
+
 import pandas as pd
-from pandas.core.frame import DataFrame
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
+from pandas.core.frame import DataFrame
+from sqlalchemy import create_engine
 
 # Load environment variables from .env file
 load_dotenv()
@@ -31,9 +32,44 @@ def execute_sql_query(query : str) -> DataFrame:
     engine = create_engine(db_url)
     return pd.read_sql_query(query, engine)
 
+def get_analytics_data(data_frame:DataFrame ) -> dict:
+
+    # Calculate total_requests and average_daily_requests
+    total_requests = int(data_frame['cntr'].sum())
+    unique_dates_count = data_frame['request_date'].nunique()
+    average_daily_requests = int(total_requests // unique_dates_count)
+
+    # Create the analytics_data dictionary
+    analytics_data = {
+        "range": data_frame['request_date'].unique().tolist(),
+        "cummulative": data_frame.groupby('request_date')['cntr'].sum().tolist(),
+        "trend": []
+    }
+
+    # Group by ref_app and create trend data
+    for app in data_frame['ref_app'].unique():
+        trend_data = {
+            "group": app,
+            "data": data_frame[data_frame['ref_app'] == app]['cntr'].tolist()
+        }
+        analytics_data["trend"].append(trend_data)
+
+    # Create the final output structure
+    final_result = {
+        "data": {
+            "summary": {
+                "total_requests": total_requests,
+                "average_daily_requests": average_daily_requests
+            },
+            "analytics_data": analytics_data
+        }
+    }
+
+    return final_result
+
 def get_request_counts(group_by_column_names: list[str],
                        start_date_str: str, end_date_str: str,
-                       user_id: int | None) -> list[dict]:
+                       user_id: int | None) -> dict:
 
     # Step 1: Execute the SQL query with dynamic date parameters
     if user_id:
@@ -64,25 +100,21 @@ def get_request_counts(group_by_column_names: list[str],
     # Step 2: Group by one or more columns and sum 'cntr'.
     grouped_df = df.groupby(group_by_column_names, as_index=False)['cntr'].sum()
 
-    # Step 3: Convert to list of dictionaries. rename cntr as Count
-    result = grouped_df.rename(columns={'cntr': 'Count'}).to_dict(orient='records')
+    #Convert request_date to string in 'YYYY-mm-dd' format
+    grouped_df['request_date'] = grouped_df['request_date'].astype(str)
+    print("grouped_df=\n", grouped_df)
 
-    return result
+    analytics_data = get_analytics_data(grouped_df)
+
+    return analytics_data
 
 if __name__ == "__main__":
 
     group_by_column_names = ["request_date", "ref_app"]
-    result = get_request_counts(group_by_column_names,"2024-12-01","2024-12-03",None)
+    analytics_data = get_request_counts(group_by_column_names,"2024-12-01","2024-12-03",None)
+    print("analytics_data=\n", json.dumps(analytics_data, indent=4))
 
-    #convert date object to string
-    for entry in result:
-        entry["request_date"] = entry["request_date"].strftime('%Y-%m-%d')
-    print("result=\n", result)
 
-    #group by request_date and find count date_wise
-    df = pd.DataFrame(result)
-    date_wise_result = df.groupby("request_date", as_index=False)['Count'].sum().to_dict(orient='records')
-    print("date_wise_result=\n", date_wise_result)
 
 
 

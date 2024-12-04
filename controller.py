@@ -15,7 +15,7 @@ def key_create() -> (Response,str):
     if not post_data or "plan" not in post_data:
         api_response = ApiResponse(error="Missing 'plan' in request body",
                                    statuscode=400)
-        result = api_response.to_json()
+        result = api_response.to_dictionary()
     else:
         result = create_key(post_data["plan"])
 
@@ -40,7 +40,7 @@ def updateKeyPlan() -> (Response,str):
     if not post_data or "plan" not in post_data or "key" not in post_data:
         api_response = ApiResponse(error="Missing 'plan' or 'key' in request body",
                                    statuscode=400)
-        result = api_response.to_json()
+        result = api_response.to_dictionary()
     else:
         result = update_key_plan(post_data)
 
@@ -62,11 +62,11 @@ def getAnalytics() -> (Response,str):
     if not start_date_str:
         api_response = ApiResponse(error="Missing 'start_date' in request parameter",
                                    statuscode=400)
-        result = api_response.to_json()
+        result = api_response.to_dictionary()
     elif not end_date_str:
         api_response = ApiResponse(error="Missing 'end_date' in request parameter",
                                    statuscode=400)
-        result = api_response.to_json()
+        result = api_response.to_dictionary()
     else:
         result = get_analytics(group_by,start_date_str,end_date_str)
 

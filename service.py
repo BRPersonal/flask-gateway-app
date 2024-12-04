@@ -1,10 +1,12 @@
-import requests
 import json
 import os
+
+import requests
 from dotenv import load_dotenv
+
 from api_response import ApiResponse
 from utils import get_current_timestamp
-from datetime import datetime,date
+from analytics_repository import get_request_counts
 
 load_dotenv()
 
@@ -18,13 +20,6 @@ print(f"baseUrl={TYK_BASE_URL}")
 print(f"OrgId={ORG_ID}")
 
 
-def dict_to_json_string(data_dict:dict) -> str:
-    def custom_date_serializer(obj):
-        if isinstance(obj, date):
-            return obj.strftime('%Y-%m-%d')  # format date as YYYY-mm-dd
-        raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
-
-    return json.dumps(data_dict, indent=4,default=custom_date_serializer) #convert to json with pretty printing
 
 def create_key(plan: str) -> dict:
     api_response: ApiResponse = None
@@ -67,7 +62,7 @@ def create_key(plan: str) -> dict:
                                    statuscode=INTERNAL_SERVER_ERROR,
                                    response=str(e)
                                    )
-    return api_response.to_json()
+    return api_response.to_dictionary()
 
 def list_keys() -> dict:
     api_response : ApiResponse = None
@@ -96,7 +91,7 @@ def list_keys() -> dict:
                                    response=str(e)
                                    )
 
-    return api_response.to_json()
+    return api_response.to_dictionary()
 
 def get_key_details(key: str) -> dict:
     api_response : ApiResponse = None
@@ -125,7 +120,7 @@ def get_key_details(key: str) -> dict:
                                    response=str(e)
                                    )
 
-    return api_response.to_json()
+    return api_response.to_dictionary()
 
 def update_key_plan(request_body:dict) -> dict:
     api_response: ApiResponse = None
@@ -160,7 +155,7 @@ def update_key_plan(request_body:dict) -> dict:
                                    statuscode=INTERNAL_SERVER_ERROR,
                                    response=str(e)
                                    )
-    return api_response.to_json()
+    return api_response.to_dictionary()
 
 def delete_key(key:str) -> dict:
     api_response : ApiResponse = None
@@ -189,12 +184,18 @@ def delete_key(key:str) -> dict:
                                    response=str(e)
                                    )
 
-    return api_response.to_json()
+    return api_response.to_dictionary()
 
 def get_analytics(group_by:str, start_date_str:str, end_date_str:str) -> dict:
     print(f"groupBy={group_by},stDate={start_date_str},endDate={end_date_str}")
-    d = dict({"chant": "Hare Krishna","date": date(2024,12,3)})
-    print(dict_to_json_string(d))
-    api_response = ApiResponse(message="Success",response = dict_to_json_string(d), statuscode="200")
 
-    return api_response.to_json()
+    group_by_column_names = ["request_date", "ref_app"]
+    analytics_data = get_request_counts(group_by_column_names,start_date_str,end_date_str,None)
+
+    api_response = ApiResponse(message="Success",
+                               response = json.loads(json.dumps(analytics_data, indent=4)),
+                               statuscode="200")
+
+    print("api_response=\n", api_response.to_dictionary())
+
+    return api_response.to_dictionary()

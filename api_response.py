@@ -14,7 +14,7 @@ class ApiResponse:
         self.response = response
         self.statuscode = statuscode
 
-    def to_json(self) -> dict:
+    def to_dictionary(self) -> dict:
 
         """
         Convert the object to a JSON string, returning either
@@ -37,7 +37,7 @@ class ApiResponse:
         """
             Return the JSON representation of the object when printed.
         """
-        return json.dumps(self.to_json())
+        return json.dumps(self.to_dictionary())
 
 
 # Example usage:
