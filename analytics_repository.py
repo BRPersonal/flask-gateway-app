@@ -1,10 +1,15 @@
+"""
+functions that start with an underscore are meant be private to this module
+"""
+
 import json
 import os
 
 import pandas as pd
 from dotenv import load_dotenv
 from pandas.core.frame import DataFrame
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,21 +23,30 @@ db_config = {
     'database': os.getenv('DB_DATABASE')
 }
 
-def get_db_url() -> str :
+def _get_db_url() -> str :
     suffix = f"{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database']}"
+
     if db_config["port"] == "3306":
         print("Generating connect url for MySql")
         return "mysql+pymysql://" + suffix
     elif db_config["port"] == "5432":
         print("Generating connect url for PostGre")
         return "postgresql://" + suffix
+    else:
+        raise ValueError(f"Invalid port: {db_config['port']}. Expected 3306 for MySQL or 5432 for PostgreSQL.")
 
-def execute_sql_query(query : str) -> DataFrame:
-    db_url = get_db_url()
+def _execute_sql_query(query : str, params : dict = None) -> DataFrame:
+    db_url = _get_db_url()
     engine = create_engine(db_url)
-    return pd.read_sql_query(query, engine)
 
-def insert_missing_rows(data_frame:DataFrame,group_by_column:str ) -> DataFrame:
+    with engine.connect() as connection:
+        # Use text() to create a prepared statement
+        result = connection.execute(text(query), params or {})
+        df = pd.DataFrame(result.fetchall(), columns=result.keys())
+
+    return df
+
+def _insert_missing_rows(data_frame:DataFrame, group_by_column:str) -> DataFrame:
 
     #Get unique request dates
     unique_dates = data_frame['request_date'].unique()
@@ -56,7 +70,7 @@ def insert_missing_rows(data_frame:DataFrame,group_by_column:str ) -> DataFrame:
 
     return data_frame  #return original if no new changes
 
-#This function is intended to be private to this module
+
 def _get_analytics_data(data_frame:DataFrame,group_by_column:str ) -> dict:
 
     # Calculate total_requests and average_daily_requests
@@ -109,14 +123,19 @@ def get_analytics_data(group_by_column: str,
         b.{group_by_column},
         COUNT(*) AS cntr
     FROM tyk_analytics_data a, key_tbl b
-    WHERE a.request_date BETWEEN '{start_date_str}' AND '{end_date_str}'
+    WHERE a.request_date BETWEEN :start_date AND :end_date
     {user_id_filter}
     and b.value = a.api_key
     GROUP BY a.request_date, b.{group_by_column};
     """
 
+    query_params = {
+        "start_date" : start_date_str,
+        "end_date" : end_date_str
+    }
+
     # Fetch data from database into a DataFrame
-    df = execute_sql_query(query)
+    df = _execute_sql_query(query,query_params)
 
     if df.empty:
         print("No records found")
@@ -133,7 +152,7 @@ def get_analytics_data(group_by_column: str,
     trimmed_df = grouped_df[~((grouped_df['request_date'] == '2024-12-03') & (grouped_df[group_by_column] == 'freeDesign'))]
     print("trimmed_df after delete=\n", trimmed_df)
 
-    trimmed_df = insert_missing_rows(trimmed_df,group_by_column)
+    trimmed_df = _insert_missing_rows(trimmed_df, group_by_column)
     print("trimmed_df after insert=\n", trimmed_df)
 
     analytics_data = _get_analytics_data(trimmed_df, group_by_column)
@@ -144,7 +163,7 @@ if __name__ == "__main__":
 
     group_by_column_name = "tier";
     #group_by_column_name = "ref_app";
-    result = get_analytics_data(group_by_column_name, "2024-12-01", "2024-12-03", None)
+    result = get_analytics_data(group_by_column_name, "2024-12-03", "2024-12-03", None)
     print("analytics_data=\n", json.dumps(result, indent=4))
 
 
