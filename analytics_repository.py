@@ -159,12 +159,98 @@ def get_analytics_data(group_by_column: str,
 
     return analytics_data
 
+def _get_top_users(data_frame: DataFrame, group_by_column: str) -> dict:
+    result_dict = {
+        "data": {
+            "total_users": int(data_frame['total_records'].iloc[0]),  # Get total_records from the first row
+            "users": []
+        }
+    }
+
+    # Populate the users list
+    for _, row in data_frame.iterrows():
+        user_info = {
+            "group": row[group_by_column],
+            "user_id": int(row['user_id']),
+            "first_name": row['first_name'],
+            "last_name": row['last_name'],
+            "usage": int(row['cntr'])
+        }
+        result_dict["data"]["users"].append(user_info)
+
+    return result_dict
+
+def get_top_users(
+                group_by_column: str,
+                start_date_str: str, end_date_str: str,
+                limit:int = 10, offset:int = 0,
+                group_by_filter: str = None) -> dict:
+
+    if group_by_filter:
+        having_clause = f" having b.{group_by_column} = :filter_value"
+    else:
+        having_clause = ""
+
+    query = f"""
+        with paginated_data as (
+          select
+          b.{group_by_column},b.user_id,count(*) as cntr
+          from tyk_analytics_data a, key_tbl b
+          where a.request_date between :start_date AND :end_date
+          and b.value = a.api_key
+          group by b.{group_by_column},b.user_id
+          {having_clause}
+        ),
+        user_data as (
+          select u.user_id,u.first_name,u.last_name,u.email
+          from user_tbl u
+        )
+        SELECT 
+            pd.{group_by_column},
+            ud.user_id,
+            ud.first_name,
+            ud.last_name,
+            ud.email,
+            pd.cntr,
+            (SELECT COUNT(*) FROM paginated_data) AS total_records
+        FROM paginated_data pd, user_data ud
+        WHERE pd.user_id = ud.user_id
+        ORDER BY pd.cntr DESC
+        LIMIT :rows_per_page OFFSET :starting_row;
+    """
+
+    query_params = {
+        "start_date" : start_date_str,
+        "end_date" : end_date_str,
+        "rows_per_page": limit,
+        "starting_row": offset
+    }
+
+    if group_by_filter:
+        query_params["filter_value"] = group_by_filter
+
+    # Fetch data from database into a DataFrame
+    df = _execute_sql_query(query,query_params)
+
+    if df.empty:
+        print("No records found")
+        return None
+
+    print("df=\n", df)
+    return _get_top_users(df,group_by_column)
+
 if __name__ == "__main__":
 
     group_by_column_name = "tier";
     #group_by_column_name = "ref_app";
+
     result = get_analytics_data(group_by_column_name, "2024-12-03", "2024-12-03", None)
     print("analytics_data=\n", json.dumps(result, indent=4))
+
+    group_by_filter = None #"chrome_extension"
+    result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-03",group_by_filter=group_by_filter)
+    print("top users=\n", json.dumps(result, indent=4))
+
 
 
 
