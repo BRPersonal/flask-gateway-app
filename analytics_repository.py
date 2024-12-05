@@ -241,14 +241,14 @@ def get_top_users(
 
 if __name__ == "__main__":
 
-    group_by_column_name = "tier";
-    #group_by_column_name = "ref_app";
+    #group_by_column_name = "tier";
+    group_by_column_name = "ref_app";
 
     result = get_analytics_data(group_by_column_name, "2024-12-03", "2024-12-03", None)
     print("analytics_data=\n", json.dumps(result, indent=4))
 
-    group_by_filter = None #"chrome_extension"
-    result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-03",group_by_filter=group_by_filter)
+    filter_by = "chrome_extension"  #None
+    result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-03",group_by_filter=filter_by)
     print("top users=\n", json.dumps(result, indent=4))
 
 

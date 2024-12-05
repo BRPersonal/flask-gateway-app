@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from api_response import ApiResponse
 from utils import get_current_timestamp
-from analytics_repository import get_analytics_data
+import analytics_repository as repository
 
 load_dotenv()
 
@@ -186,21 +186,45 @@ def delete_key(key:str) -> dict:
 
     return api_response.to_dictionary()
 
-def get_analytics(group_by:str, start_date_str:str, end_date_str:str) -> dict:
-    print(f"groupBy={group_by},stDate={start_date_str},endDate={end_date_str}")
+def get_analytics(group_by:str, start_date_str:str, end_date_str:str,user_id: int | None) -> dict:
+    print(f"groupBy={group_by},stDate={start_date_str},endDate={end_date_str},user_id={user_id}")
 
-    analytics_data = get_analytics_data(group_by, start_date_str, end_date_str, None)
+    try:
+        analytics_data = repository.get_analytics_data(group_by, start_date_str, end_date_str, user_id)
 
-    if analytics_data:
-        api_response = ApiResponse(message="Success",
-                                   response = json.loads(json.dumps(analytics_data, indent=4)),
-                                   statuscode="200")
-    else:
-        api_response = ApiResponse(message="No Data Found",
-                                   response=None,
-                                   statuscode="200")
+        if analytics_data:
+            api_response = ApiResponse(message="Success",
+                                       response = json.loads(json.dumps(analytics_data, indent=4)),
+                                       statuscode="200")
+        else:
+            api_response = ApiResponse(message="No Data Found",
+                                       response=None,
+                                       statuscode="200")
+    except Exception as e:
+        api_response = ApiResponse(error="Request failed",
+                                   statuscode=INTERNAL_SERVER_ERROR,
+                                   response=str(e))
+    return api_response.to_dictionary()
 
+def get_top_users(group_by:str, start_date_str:str, end_date_str:str,
+                  limit:int,offset:int, filter_by:str | None) -> dict:
+    print(f"groupBy={group_by},stDate={start_date_str},endDate={end_date_str},limit={limit},offset={offset},filter_by={filter_by}")
 
-    print("api_response=\n", api_response.to_dictionary())
+    try:
+        top_users = repository.get_top_users(group_by, start_date_str, end_date_str,
+                                             limit,offset,filter_by)
+
+        if top_users:
+            api_response = ApiResponse(message="Success",
+                                       response = json.loads(json.dumps(top_users, indent=4)),
+                                       statuscode="200")
+        else:
+            api_response = ApiResponse(message="No Data Found",
+                                       response=None,
+                                       statuscode="200")
+    except Exception as e:
+        api_response = ApiResponse(error="Request failed",
+                                   statuscode=INTERNAL_SERVER_ERROR,
+                                   response=str(e))
 
     return api_response.to_dictionary()
