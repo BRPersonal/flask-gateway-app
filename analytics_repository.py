@@ -170,8 +170,18 @@ def get_analytics_data(group_by_column: str,
 
     print("df from source=\n", df)
 
-    #Convert request_date to string in 'YYYY-mm-dd' format
-    df['request_date'] = df['request_date'].astype(str)
+    days_count = _count_dates_between(start_date_str,end_date_str)
+    if days_count > 30:
+        print("Input range exceeds 30 days. Regrouping by month")
+        #Drop the day part from date
+        df['request_date'] = df['request_date'].astype(str).str.slice(0, 7)
+
+        #form the group again and calculate fresh sum
+        df = df.groupby(["request_date",group_by_column], as_index=False)['cntr'].sum()
+    else:
+        #Convert request_date to string in 'YYYY-mm-dd' format
+        df['request_date'] = df['request_date'].astype(str)
+
     print("df after converting to string=\n", df)
 
     corrected_df = _insert_missing_rows(df, group_by_column)
@@ -266,7 +276,7 @@ if __name__ == "__main__":
     group_by_column_name = "tier";
     #group_by_column_name = "ref_app";
 
-    result = get_analytics_data(group_by_column_name, "2024-12-03", "2024-12-03", fetch_from_db=False)
+    result = get_analytics_data(group_by_column_name, "2024-11-01", "2024-12-03", fetch_from_db=False)
     print("analytics_data=\n", json.dumps(result, indent=4))
 
     filter_by = None  #"chrome_extension"
