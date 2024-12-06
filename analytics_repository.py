@@ -9,6 +9,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from pandas.core.frame import DataFrame
 from sqlalchemy import create_engine, text
+from datetime import datetime
 
 
 # Load environment variables from .env file
@@ -46,6 +47,30 @@ def _execute_sql_query(query : str, params : dict = None) -> DataFrame:
 
     return df
 
+
+def _count_dates_between(start_date_str, end_date_str) -> int:
+    # Convert the date strings to datetime objects
+    start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
+
+    # Calculate the difference in days
+    delta = (end_date - start_date).days
+
+    return delta
+
+def _get_sample_data(group_by_column : str) -> DataFrame:
+    data = [
+        {"request_date": "2024-12-01", f"{group_by_column}": "developer", "cntr": 3},
+        {"request_date": "2024-12-02", f"{group_by_column}": "chrome_extension", "cntr": 2},
+        {"request_date": "2024-12-02", f"{group_by_column}": "developer", "cntr": 2},
+        {"request_date": "2021-01-01", f"{group_by_column}": "developer", "cntr": 10}
+    ]
+
+    # Convert list of dictionaries to DataFrame
+    df = pd.DataFrame(data)
+    return df
+
+
 def _insert_missing_rows(data_frame:DataFrame, group_by_column:str) -> DataFrame:
 
     #Get unique request dates
@@ -66,7 +91,7 @@ def _insert_missing_rows(data_frame:DataFrame, group_by_column:str) -> DataFrame
 
     if new_rows:
         new_df = pd.DataFrame(new_rows)
-        return pd.concat([data_frame, new_df], ignore_index=True)
+        return pd.concat([data_frame, new_df], ignore_index=True).sort_values(by=['request_date', group_by_column]).reset_index(drop=True)
 
     return data_frame  #return original if no new changes
 
@@ -108,7 +133,8 @@ def _get_analytics_data(data_frame:DataFrame,group_by_column:str ) -> dict:
 
 def get_analytics_data(group_by_column: str,
                         start_date_str: str, end_date_str: str,
-                        user_id: int | None) -> dict:
+                        user_id: int = None,
+                        fetch_from_db: bool = True) -> dict:
     # Step 1: Execute the SQL query with dynamic date parameters
     if user_id:
         user_id_filter = f"and b.user_id={user_id}"
@@ -132,14 +158,17 @@ def get_analytics_data(group_by_column: str,
         "end_date" : end_date_str
     }
 
-    # Fetch data from database into a DataFrame
-    df = _execute_sql_query(query,query_params)
+    if fetch_from_db:
+        # Fetch data from database into a DataFrame
+        df = _execute_sql_query(query,query_params)
+    else:
+        df = _get_sample_data(group_by_column)
 
     if df.empty:
         print("No records found")
         return None
 
-    print("df from db=\n", df)
+    print("df from source=\n", df)
 
     #Convert request_date to string in 'YYYY-mm-dd' format
     df['request_date'] = df['request_date'].astype(str)
@@ -234,13 +263,13 @@ def get_top_users(
 
 if __name__ == "__main__":
 
-    #group_by_column_name = "tier";
-    group_by_column_name = "ref_app";
+    group_by_column_name = "tier";
+    #group_by_column_name = "ref_app";
 
-    result = get_analytics_data(group_by_column_name, "2024-12-03", "2024-12-03", None)
+    result = get_analytics_data(group_by_column_name, "2024-12-03", "2024-12-03", fetch_from_db=False)
     print("analytics_data=\n", json.dumps(result, indent=4))
 
-    filter_by = "chrome_extension"  #None
+    filter_by = None  #"chrome_extension"
     result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-03",group_by_filter=filter_by)
     print("top users=\n", json.dumps(result, indent=4))
 
