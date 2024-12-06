@@ -109,8 +109,6 @@ def _get_analytics_data(data_frame:DataFrame,group_by_column:str ) -> dict:
 def get_analytics_data(group_by_column: str,
                         start_date_str: str, end_date_str: str,
                         user_id: int | None) -> dict:
-    group_by_column_names = ["request_date"] + [group_by_column]
-
     # Step 1: Execute the SQL query with dynamic date parameters
     if user_id:
         user_id_filter = f"and b.user_id={user_id}"
@@ -141,21 +139,16 @@ def get_analytics_data(group_by_column: str,
         print("No records found")
         return None
 
-    # Step 2: Group by one or more columns and sum 'cntr'.
-    grouped_df = df.groupby(group_by_column_names, as_index=False)['cntr'].sum()
+    print("df from db=\n", df)
 
     #Convert request_date to string in 'YYYY-mm-dd' format
-    grouped_df['request_date'] = grouped_df['request_date'].astype(str)
-    print("grouped_df=\n", grouped_df)
+    df['request_date'] = df['request_date'].astype(str)
+    print("df after converting to string=\n", df)
 
-    #remove specific row and see how results appear
-    trimmed_df = grouped_df[~((grouped_df['request_date'] == '2024-12-03') & (grouped_df[group_by_column] == 'freeDesign'))]
-    print("trimmed_df after delete=\n", trimmed_df)
+    corrected_df = _insert_missing_rows(df, group_by_column)
+    print("corrected_df after insert=\n", corrected_df)
 
-    trimmed_df = _insert_missing_rows(trimmed_df, group_by_column)
-    print("trimmed_df after insert=\n", trimmed_df)
-
-    analytics_data = _get_analytics_data(trimmed_df, group_by_column)
+    analytics_data = _get_analytics_data(corrected_df, group_by_column)
 
     return analytics_data
 
