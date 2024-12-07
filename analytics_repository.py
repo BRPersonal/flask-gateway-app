@@ -60,10 +60,50 @@ def _count_dates_between(start_date_str, end_date_str) -> int:
 
 def _get_sample_data(group_by_column : str) -> DataFrame:
     data = [
-        {"request_date": "2024-12-01", f"{group_by_column}": "developer", "cntr": 3},
-        {"request_date": "2024-12-02", f"{group_by_column}": "chrome_extension", "cntr": 2},
-        {"request_date": "2024-12-02", f"{group_by_column}": "developer", "cntr": 2},
-        {"request_date": "2021-01-01", f"{group_by_column}": "developer", "cntr": 10}
+        #2024-01
+        {"request_date": "2024-01-01", f"{group_by_column}": "adobe", "cntr": 3000},
+        {"request_date": "2024-01-02", f"{group_by_column}": "adobe", "cntr": 1000},
+
+        {"request_date": "2024-01-03", f"{group_by_column}": "figma", "cntr": 2500},
+        {"request_date": "2024-01-04", f"{group_by_column}": "figma", "cntr": 2000},
+        {"request_date": "2024-01-05", f"{group_by_column}": "figma", "cntr": 500},
+
+        {"request_date": "2024-01-03", f"{group_by_column}": "chrome", "cntr": 1000},
+        {"request_date": "2024-01-04", f"{group_by_column}": "chrome", "cntr": 800},
+        {"request_date": "2024-01-05", f"{group_by_column}": "chrome", "cntr": 1200},
+
+        #2024-02
+        {"request_date": "2024-02-01", f"{group_by_column}": "adobe", "cntr": 3000},
+        {"request_date": "2024-02-02", f"{group_by_column}": "adobe", "cntr": 1000},
+        {"request_date": "2024-02-03", f"{group_by_column}": "adobe", "cntr": 2000},
+
+        {"request_date": "2024-02-01", f"{group_by_column}": "figma", "cntr": 3000},
+        {"request_date": "2024-02-02", f"{group_by_column}": "figma", "cntr": 2000},
+        {"request_date": "2024-02-03", f"{group_by_column}": "figma", "cntr": 2000},
+
+        {"request_date": "2024-02-03", f"{group_by_column}": "chrome", "cntr": 1000},
+        {"request_date": "2024-02-04", f"{group_by_column}": "chrome", "cntr": 800},
+        {"request_date": "2024-02-05", f"{group_by_column}": "chrome", "cntr": 200},
+
+        # 2024-03
+        {"request_date": "2024-03-01", f"{group_by_column}": "adobe", "cntr": 3000},
+
+        {"request_date": "2024-03-01", f"{group_by_column}": "figma", "cntr": 3000},
+        {"request_date": "2024-03-02", f"{group_by_column}": "figma", "cntr": 600},
+        {"request_date": "2024-03-03", f"{group_by_column}": "figma", "cntr": 400},
+
+        {"request_date": "2024-03-03", f"{group_by_column}": "chrome", "cntr": 1000},
+        {"request_date": "2024-03-04", f"{group_by_column}": "chrome", "cntr": 1000},
+        {"request_date": "2024-03-05", f"{group_by_column}": "chrome", "cntr": 1000},
+
+        # 2024-04
+        {"request_date": "2024-04-06", f"{group_by_column}": "adobe", "cntr": 2000},
+
+        {"request_date": "2024-04-01", f"{group_by_column}": "figma", "cntr": 3000},
+
+        {"request_date": "2024-04-03", f"{group_by_column}": "chrome", "cntr": 2000},
+        {"request_date": "2024-04-05", f"{group_by_column}": "chrome", "cntr": 1000}
+
     ]
 
     # Convert list of dictionaries to DataFrame
@@ -96,17 +136,16 @@ def _insert_missing_rows(data_frame:DataFrame, group_by_column:str) -> DataFrame
     return data_frame  #return original if no new changes
 
 
-def _get_analytics_data(data_frame:DataFrame,group_by_column:str ) -> dict:
+def _get_analytics_data(data_frame:DataFrame,group_by_column:str,total_days:int ) -> dict:
 
     # Calculate total_requests and average_daily_requests
     total_requests = int(data_frame['cntr'].sum())
-    unique_dates_count = data_frame['request_date'].nunique()
-    average_daily_requests = int(total_requests // unique_dates_count)
+    average_daily_requests = int(total_requests // total_days)
 
     # Create the analytics_data dictionary
     analytics_data = {
         "range": data_frame['request_date'].unique().tolist(),
-        "cummulative": data_frame.groupby('request_date')['cntr'].sum().tolist(),
+        "cumulative": data_frame.groupby('request_date')['cntr'].sum().tolist(),
         "trend": []
     }
 
@@ -150,7 +189,8 @@ def get_analytics_data(group_by_column: str,
     WHERE a.request_date BETWEEN :start_date AND :end_date
     {user_id_filter}
     and b.value = a.api_key
-    GROUP BY a.request_date, b.{group_by_column};
+    GROUP BY a.request_date, b.{group_by_column}
+    ORDER BY a.request_date, b.{group_by_column};
     """
 
     query_params = {
@@ -187,7 +227,7 @@ def get_analytics_data(group_by_column: str,
     corrected_df = _insert_missing_rows(df, group_by_column)
     print("corrected_df after insert=\n", corrected_df)
 
-    analytics_data = _get_analytics_data(corrected_df, group_by_column)
+    analytics_data = _get_analytics_data(corrected_df, group_by_column,days_count)
 
     return analytics_data
 
@@ -279,9 +319,9 @@ if __name__ == "__main__":
     result = get_analytics_data(group_by_column_name, "2024-11-01", "2024-12-03", fetch_from_db=False)
     print("analytics_data=\n", json.dumps(result, indent=4))
 
-    filter_by = None  #"chrome_extension"
-    result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-03",group_by_filter=filter_by)
-    print("top users=\n", json.dumps(result, indent=4))
+    # filter_by = None  #"chrome_extension"
+    # result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-03",group_by_filter=filter_by)
+    # print("top users=\n", json.dumps(result, indent=4))
 
 
 
