@@ -101,12 +101,12 @@ def _get_sample_data(group_by_column : str) -> DataFrame:
         {"request_date": "2024-03-05", f"{group_by_column}": "chrome", "cntr": 1000},
 
         # 2024-04
-        {"request_date": "2024-04-06", f"{group_by_column}": "adobe", "cntr": 2000},
-
         {"request_date": "2024-04-01", f"{group_by_column}": "figma", "cntr": 3000},
 
         {"request_date": "2024-04-03", f"{group_by_column}": "chrome", "cntr": 2000},
-        {"request_date": "2024-04-05", f"{group_by_column}": "chrome", "cntr": 1000}
+        {"request_date": "2024-04-05", f"{group_by_column}": "chrome", "cntr": 1000},
+
+        {"request_date": "2024-04-06", f"{group_by_column}": "adobe", "cntr": 2000}
 
     ]
 
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     group_by_column_name = "tier";
     #group_by_column_name = "ref_app";
 
-    result = get_analytics_data(group_by_column_name, "2024-11-01", "2024-12-03", fetch_from_db=False)
+    result = get_analytics_data(group_by_column_name, "2024-12-01", "2024-12-04", fetch_from_db=False)
     print("analytics_data=\n", json.dumps(result, indent=4))
 
     # filter_by = None  #"chrome_extension"
