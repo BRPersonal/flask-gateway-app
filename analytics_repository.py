@@ -60,6 +60,10 @@ def _count_dates_between(start_date_str, end_date_str) -> int:
 
 def _get_sample_data(group_by_column : str) -> DataFrame:
     data = [
+
+        #2023-12
+        {"request_date": "2023-12-31", f"{group_by_column}": "adobe", "cntr": 520},
+
         #2024-01
         {"request_date": "2024-01-01", f"{group_by_column}": "adobe", "cntr": 3000},
         {"request_date": "2024-01-02", f"{group_by_column}": "adobe", "cntr": 1000},
