@@ -17,7 +17,7 @@ class ApiResponse:
     def to_dictionary(self) -> dict:
 
         """
-        Convert the object to a JSON string, returning either
+        Convert the object to a dictionary, returning either
         message or error.
         """
         result = {
