@@ -2,15 +2,11 @@
 functions that start with an underscore are meant be private to this module
 """
 
-import json
 import os
-
 import pandas as pd
 from dotenv import load_dotenv
 from pandas.core.frame import DataFrame
 from sqlalchemy import create_engine, text
-from datetime import datetime
-
 
 # Load environment variables from .env file
 load_dotenv()
@@ -47,137 +43,9 @@ def _execute_sql_query(query : str, params : dict = None) -> DataFrame:
 
     return df
 
-
-def _count_dates_between(start_date_str, end_date_str) -> int:
-    # Convert the date strings to datetime objects
-    start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
-    end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
-
-    # Calculate the difference in days
-    delta = (end_date - start_date).days
-
-    return delta
-
-def _get_sample_data(group_by_column : str) -> DataFrame:
-    data = [
-
-        #2023-12
-        {"request_date": "2023-12-31", f"{group_by_column}": "adobe", "cntr": 520},
-
-        #2024-01
-        {"request_date": "2024-01-01", f"{group_by_column}": "adobe", "cntr": 3000},
-        {"request_date": "2024-01-02", f"{group_by_column}": "adobe", "cntr": 1000},
-
-        {"request_date": "2024-01-03", f"{group_by_column}": "figma", "cntr": 2500},
-        {"request_date": "2024-01-04", f"{group_by_column}": "figma", "cntr": 2000},
-        {"request_date": "2024-01-05", f"{group_by_column}": "figma", "cntr": 500},
-
-        {"request_date": "2024-01-03", f"{group_by_column}": "chrome", "cntr": 1000},
-        {"request_date": "2024-01-04", f"{group_by_column}": "chrome", "cntr": 800},
-        {"request_date": "2024-01-05", f"{group_by_column}": "chrome", "cntr": 1200},
-
-        #2024-02
-        {"request_date": "2024-02-01", f"{group_by_column}": "adobe", "cntr": 3000},
-        {"request_date": "2024-02-02", f"{group_by_column}": "adobe", "cntr": 1000},
-        {"request_date": "2024-02-03", f"{group_by_column}": "adobe", "cntr": 2000},
-
-        {"request_date": "2024-02-01", f"{group_by_column}": "figma", "cntr": 3000},
-        {"request_date": "2024-02-02", f"{group_by_column}": "figma", "cntr": 2000},
-        {"request_date": "2024-02-03", f"{group_by_column}": "figma", "cntr": 2000},
-
-        {"request_date": "2024-02-03", f"{group_by_column}": "chrome", "cntr": 1000},
-        {"request_date": "2024-02-04", f"{group_by_column}": "chrome", "cntr": 800},
-        {"request_date": "2024-02-05", f"{group_by_column}": "chrome", "cntr": 200},
-
-        # 2024-03
-        {"request_date": "2024-03-01", f"{group_by_column}": "adobe", "cntr": 3000},
-
-        {"request_date": "2024-03-01", f"{group_by_column}": "figma", "cntr": 3000},
-        {"request_date": "2024-03-02", f"{group_by_column}": "figma", "cntr": 600},
-        {"request_date": "2024-03-03", f"{group_by_column}": "figma", "cntr": 400},
-
-        {"request_date": "2024-03-03", f"{group_by_column}": "chrome", "cntr": 1000},
-        {"request_date": "2024-03-04", f"{group_by_column}": "chrome", "cntr": 1000},
-        {"request_date": "2024-03-05", f"{group_by_column}": "chrome", "cntr": 1000},
-
-        # 2024-04
-        {"request_date": "2024-04-01", f"{group_by_column}": "figma", "cntr": 3000},
-
-        {"request_date": "2024-04-03", f"{group_by_column}": "chrome", "cntr": 2000},
-        {"request_date": "2024-04-05", f"{group_by_column}": "chrome", "cntr": 1000},
-
-        {"request_date": "2024-04-06", f"{group_by_column}": "adobe", "cntr": 2000}
-
-    ]
-
-    # Convert list of dictionaries to DataFrame
-    df = pd.DataFrame(data)
-    return df
-
-
-def _insert_missing_rows(data_frame:DataFrame, group_by_column:str) -> DataFrame:
-
-    #Get unique request dates
-    unique_dates = data_frame['request_date'].unique()
-
-    #Get unique values for group_by_column
-    unique_groups = data_frame[group_by_column].unique()
-
-    #create a list to hold new rows
-    new_rows = []
-    # Loop through each unique request date and check for each unique group
-    for dt in unique_dates:
-        for grp in unique_groups:
-            # Check if the combination exists
-            if not ((data_frame['request_date'] == dt) & (data_frame[group_by_column] == grp)).any():
-                # Insert a new row with cntr as 0
-                new_rows.append({'request_date': dt, group_by_column: grp, 'cntr': 0})
-
-    if new_rows:
-        new_df = pd.DataFrame(new_rows)
-        return pd.concat([data_frame, new_df], ignore_index=True).sort_values(by=['request_date', group_by_column]).reset_index(drop=True)
-
-    return data_frame  #return original if no new changes
-
-
-def _get_analytics_data(data_frame:DataFrame,group_by_column:str,total_days:int ) -> dict:
-
-    # Calculate total_requests and average_daily_requests
-    total_requests = int(data_frame['cntr'].sum())
-    average_daily_requests = int(total_requests // total_days)
-
-    # Create the analytics_data dictionary
-    analytics_data = {
-        "range": data_frame['request_date'].unique().tolist(),
-        "cumulative": data_frame.groupby('request_date')['cntr'].sum().tolist(),
-        "trend": []
-    }
-
-    # Group by given column and create trend data
-    for app in data_frame[group_by_column].unique():
-        trend_data = {
-            "group": app,
-            "data": data_frame[data_frame[group_by_column] == app]['cntr'].tolist()
-        }
-        analytics_data["trend"].append(trend_data)
-
-    # Create the final output structure
-    final_result = {
-        "data": {
-            "summary": {
-                "total_requests": total_requests,
-                "average_daily_requests": average_daily_requests
-            },
-            "analytics_data": analytics_data
-        }
-    }
-
-    return final_result
-
-def get_analytics_data(group_by_column: str,
-                        start_date_str: str, end_date_str: str,
-                        user_id: int = None,
-                        fetch_from_db: bool = True) -> dict:
+def get_analytics(group_by_column: str,
+                  start_date_str: str, end_date_str: str,
+                  user_id: int = None) -> DataFrame:
     # Step 1: Execute the SQL query with dynamic date parameters
     if user_id:
         user_id_filter = f"and b.user_id={user_id}"
@@ -202,65 +70,16 @@ def get_analytics_data(group_by_column: str,
         "end_date" : end_date_str
     }
 
-    if fetch_from_db:
-        # Fetch data from database into a DataFrame
-        df = _execute_sql_query(query,query_params)
-    else:
-        df = _get_sample_data(group_by_column)
+    # Fetch data from database into a DataFrame
+    df = _execute_sql_query(query,query_params)
 
-    if df.empty:
-        print("No records found")
-        return None
-
-    print("df from source=\n", df)
-
-    days_count = _count_dates_between(start_date_str,end_date_str)
-    if days_count > 30:
-        print("Input range exceeds 30 days. Regrouping by month")
-        #Drop the day part from date
-        df['request_date'] = df['request_date'].astype(str).str.slice(0, 7)
-
-        #form the group again and calculate fresh sum
-        df = df.groupby(["request_date",group_by_column], as_index=False)['cntr'].sum()
-    else:
-        #Convert request_date to string in 'YYYY-mm-dd' format
-        df['request_date'] = df['request_date'].astype(str)
-
-    print("df after converting to string=\n", df)
-
-    corrected_df = _insert_missing_rows(df, group_by_column)
-    print("corrected_df after insert=\n", corrected_df)
-
-    analytics_data = _get_analytics_data(corrected_df, group_by_column,days_count)
-
-    return analytics_data
-
-def _get_top_users(data_frame: DataFrame, group_by_column: str) -> dict:
-    result_dict = {
-        "data": {
-            "total_users": int(data_frame['total_records'].iloc[0]),  # Get total_records from the first row
-            "users": []
-        }
-    }
-
-    # Populate the users list
-    for _, row in data_frame.iterrows():
-        user_info = {
-            "group": row[group_by_column],
-            "user_id": int(row['user_id']),
-            "first_name": row['first_name'],
-            "last_name": row['last_name'],
-            "usage": int(row['cntr'])
-        }
-        result_dict["data"]["users"].append(user_info)
-
-    return result_dict
+    return df
 
 def get_top_users(
                 group_by_column: str,
                 start_date_str: str, end_date_str: str,
                 limit:int = 10, offset:int = 0,
-                group_by_filter: str = None) -> dict:
+                group_by_filter: str = None) -> DataFrame:
 
     if group_by_filter:
         having_clause = f" having b.{group_by_column} = :filter_value"
@@ -291,7 +110,7 @@ def get_top_users(
             (SELECT COUNT(*) FROM paginated_data) AS total_records
         FROM paginated_data pd, user_data ud
         WHERE pd.user_id = ud.user_id
-        ORDER BY pd.cntr DESC
+        ORDER BY pd.cntr DESC,ud.user_id
         LIMIT :rows_per_page OFFSET :starting_row;
     """
 
@@ -307,28 +126,4 @@ def get_top_users(
 
     # Fetch data from database into a DataFrame
     df = _execute_sql_query(query,query_params)
-
-    if df.empty:
-        print("No records found")
-        return None
-
-    print("df=\n", df)
-    return _get_top_users(df,group_by_column)
-
-if __name__ == "__main__":
-
-    group_by_column_name = "tier";
-    #group_by_column_name = "ref_app";
-
-    result = get_analytics_data(group_by_column_name, "2024-12-01", "2024-12-04", fetch_from_db=False)
-    print("analytics_data=\n", json.dumps(result, indent=4))
-
-    # filter_by = None  #"chrome_extension"
-    # result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-03",group_by_filter=filter_by)
-    # print("top users=\n", json.dumps(result, indent=4))
-
-
-
-
-
-
+    return df
