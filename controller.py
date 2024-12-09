@@ -54,7 +54,7 @@ def delete_key(key: str) -> (Response,str):
 @app.route('/analytics', methods=['GET'])
 def get_analytics() -> (Response,str):
 
-    group_by = request.args.get('group_by', default="ref_app")  # ref_app if not provided
+    group_by = request.args.get('group_by', default="tier")  # tier if not provided
 
     start_date_str = request.args.get('start_date')  # Required parameter
     end_date_str = request.args.get('end_date')  # Required parameter
