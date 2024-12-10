@@ -364,5 +364,5 @@ if __name__ == "__main__":
     print("analytics_data=\n", json.dumps(result, indent=4))
 
     filter_by = None  #"chrome_extension"
-    result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-03",limit=10,offset=0,group_by_filter=filter_by)
+    result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-04",limit=10,offset=0,group_by_filter=filter_by)
     print("top users=\n", json.dumps(result, indent=4))
