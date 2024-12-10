@@ -359,10 +359,12 @@ if __name__ == "__main__":
 
     group_by_column_name = "tier";
     #group_by_column_name = "ref_app";
+    start_date_str = "2024-12-01"
+    end_date_str = "2025-01-02"
 
-    result = get_analytics(group_by_column_name, "2024-12-01", "2024-12-04")
+    result = get_analytics(group_by_column_name, start_date_str,end_date_str)
     print("analytics_data=\n", json.dumps(result, indent=4))
 
     filter_by = None  #"chrome_extension"
-    result = get_top_users(group_by_column_name, "2024-12-01", "2024-12-04",limit=10,offset=0,group_by_filter=filter_by)
+    result = get_top_users(group_by_column_name, start_date_str, end_date_str,limit=10,offset=0,group_by_filter=filter_by)
     print("top users=\n", json.dumps(result, indent=4))
