@@ -206,18 +206,24 @@ def get_analytics(group_by_column:str, start_date_str:str, end_date_str:str,user
             if days_count > 30:
                 print("Input range exceeds 30 days. Regrouping by month")
 
+                aggregate_month = True
+
                 # Convert request_date to string in 'YYYY-mm-dd' format and drop the day part from date
                 analytics_data_frame['request_date'] = analytics_data_frame['request_date'].astype(str).str.slice(0, 7)
 
                 # form the group again and calculate fresh sum
                 analytics_data_frame = analytics_data_frame.groupby(["request_date", group_by_column], as_index=False)['cntr'].sum()
             else:
+
+                aggregate_month = False
+
                 # Convert request_date to string in 'YYYY-mm-dd' format
                 analytics_data_frame['request_date'] = analytics_data_frame['request_date'].astype(str)
 
             print("df after converting to string=\n", analytics_data_frame)
 
-            corrected_df = _insert_missing_rows(analytics_data_frame, group_by_column)
+            unique_dates = _get_date_range(start_date_str, end_date_str, aggregate_month)
+            corrected_df = _insert_missing_rows(analytics_data_frame, group_by_column,unique_dates)
             print("corrected_df after insert=\n", corrected_df)
 
             analytics_data = _get_analytics_data(corrected_df, group_by_column, days_count)
@@ -289,10 +295,7 @@ def _get_analytics_data(data_frame:DataFrame,group_by_column:str,total_days:int 
 
     return final_result
 
-def _insert_missing_rows(data_frame:DataFrame, group_by_column:str) -> DataFrame:
-
-    #Get unique request dates
-    unique_dates = data_frame['request_date'].unique()
+def _insert_missing_rows(data_frame:DataFrame, group_by_column:str,unique_dates:list[str]) -> DataFrame:
 
     #Get unique values for group_by_column
     unique_groups = data_frame[group_by_column].unique()
@@ -344,6 +347,13 @@ def _get_top_users(data_frame: DataFrame, group_by_column: str) -> dict:
         result_dict["data"]["users"].append(user_info)
 
     return result_dict
+
+def _get_date_range(start_date_str:str, end_date_str:str,aggregate_month:bool = False) -> list[str] :
+    if aggregate_month:
+        date_range = pd.date_range(start=start_date_str, end=end_date_str).strftime('%Y-%m').unique().tolist()
+    else:
+        date_range = pd.date_range(start=start_date_str, end=end_date_str).strftime('%Y-%m-%d').tolist()
+    return date_range
 
 if __name__ == "__main__":
 
