@@ -338,6 +338,7 @@ def _get_top_users(data_frame: DataFrame, group_by_column: str) -> dict:
             "user_id": int(row['user_id']),
             "first_name": row['first_name'],
             "last_name": row['last_name'],
+            "email": row['email'],
             "usage": int(row['cntr'])
         }
         result_dict["data"]["users"].append(user_info)
