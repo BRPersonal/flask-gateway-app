@@ -22,11 +22,25 @@ What you define specific for a policy?
 ---------------------------
 access_rights,org_id,id,name,per,quota_max,quota_renewal_rate,rate
 Other details just use the defaults
+quota_max is cumulative for a day (It is actually for the window period defined by quota_renewal_rate)
+quota_renewal_rate is in seconds. if it says 86400, the quota is for entire day
+per is in seconds. Together with rate , this defines a shorter window period
+For eg., 
+  "per": 60,
+  "quota_max": 10,
+  "quota_renewal_rate": 86400,
+  "rate": 5,
+says you can hit a max. of 5 requests in a minute and a max. of 10 requests in a day
+
 
 Setting up Tyk Open source APi Gateway in local machine
 --------------------------------------------------------
+$ cd ~/poc
 $ git clone https://github.com/TykTechnologies/tyk-gateway-docker
 $ cd tyk-gateway-docker
+$ pwd
+/Users/adiyen/poc/tyk-gateway-docker
+
 
 put your api definition json files in apps folder (refer samples/apis folder)
 put your policy definition json files in policies folder (refer samples/policies)
