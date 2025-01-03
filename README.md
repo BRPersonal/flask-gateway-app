@@ -27,10 +27,10 @@ quota_renewal_rate is in seconds. if it says 86400, the quota is for entire day
 per is in seconds. Together with rate , this defines a shorter window period
 For eg., 
   "per": 60,
-  "quota_max": 10,
+  "quota_max": 1000,
   "quota_renewal_rate": 86400,
   "rate": 5,
-says you can hit a max. of 5 requests in a minute and a max. of 10 requests in a day
+says you can hit a max. of 5 requests in a minute and a max. of 1000 requests in a day
 
 
 Setting up Tyk Open source APi Gateway in local machine
