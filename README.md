@@ -45,6 +45,8 @@ $ pwd
 put your api definition json files in apps folder (refer samples/apis folder)
 put your policy definition json files in policies folder (refer samples/policies)
 
+Run this command only the first time after you have cloned the repo.For subsequent times
+use only start and stop commands
 $ docker-compose up -d
 
 test the installation
