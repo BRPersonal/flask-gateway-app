@@ -99,4 +99,4 @@ def get_top_users() -> (Response,str):
     return jsonify(result), result['status_code']
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)

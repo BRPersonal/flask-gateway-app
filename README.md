@@ -63,6 +63,11 @@ the api keys created will be lost. Dont use it. Use stop / start command instead
 
 Api Demo
 ---------
+Create environment in Postman give a name "Flask-Tyk-App-Local"
+Set base_url to http://localhost:5002
+In the post man collection "Flask-Tyk-App-Local" in the top right you
+will see "No Environment" dropdown. choose , "Flask-Tyk-App-Local"
+
 POST {{base_url}}/create-key
 Body raw
 {
