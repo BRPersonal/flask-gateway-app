@@ -7,7 +7,7 @@ Tyk Integration notes
 2)Put your policies as json files under policies folder in tyk installation folder
 3)In all policy files make sure "access_rights" section includes all the apis.
 4)In policy json "access_rights" section , the top-element
-should not be api "name". It should be "api_id" only
+should match "api_id" only and not "api_name"
 5)In every api and policy json , make sure it has "org_id" and that it matches ORG_ID 
 specified in .env file in this application folder
 6)Make sure TYK_GW_SECRET environment set in docker-compose.yml matches X-TYK-AUTHORIZATION
@@ -25,6 +25,7 @@ Other details just use the defaults
 quota_max is cumulative for a day (It is actually for the window period defined by quota_renewal_rate)
 quota_renewal_rate is in seconds. if it says 86400, the quota is for entire day
 per is in seconds. Together with rate , this defines a shorter window period
+quota is a larger window; rate is a shorter window
 For eg., 
   "per": 60,
   "quota_max": 1000,
