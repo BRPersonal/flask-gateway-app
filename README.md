@@ -77,12 +77,14 @@ Body raw
 {
     "plan":"FreeDesign"
 }
+new key created on 19-Apr-25: FleetStudio1e6afddbada849d383350af9a61cb552
 
 POST {{base_url}}/create-key
 Body raw
 {
     "plan":"FreeDeveloper"
 }
+new key created on 19-Apr-25: FleetStudioa369a7db071e4fca90d3f06048bf7a43
 
 GET {{base_url}}/list-keys
 GET {{base_url}}/get-key/FleetStudio68031d2590614c30a940d5c43af07d5f
