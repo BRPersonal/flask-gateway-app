@@ -42,6 +42,9 @@ $ cd tyk-gateway-docker
 $ pwd
 /Users/adiyen/poc/tyk-gateway-docker
 
+Update the following tyk-setup files in folder 
+docker-compose.yml
+tyk.standalone.conf - in this file "storage_expiration_time" specifies cache expiry in seconds
 
 put your api definition json files in apps folder (refer samples/apis folder)
 put your policy definition json files in policies folder (refer samples/policies)
