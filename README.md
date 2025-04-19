@@ -57,8 +57,13 @@ test the installation
 $ curl localhost:8080/hello
 
 Use start/stop commands to start or stop the tyk-gateway services using these commands
+$ cd ~/poc/tyk-gateway-docker
 $ docker-compose start
 $ docker-compose stop
+
+check if docker container is running or stopped
+$ docker ps
+$ docker ps -a
 
 Note: If you run the command
 $ docker-compose down 
