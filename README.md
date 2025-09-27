@@ -32,6 +32,10 @@ For eg.,
   "quota_renewal_rate": 86400,
   "rate": 5,
 says you can hit a max. of 5 requests in a minute and a max. of 1000 requests in a day
+Note:  
+-----  
+per,quota_max,quota_renewal_rate,rate are defined in many places  
+Those that are defined under "access_rights" are dummy and can be ignored  
 
 
 Setting up Tyk Open source APi Gateway in local machine
@@ -50,7 +54,7 @@ put your api definition json files in apps folder (refer samples/apis folder)
 put your policy definition json files in policies folder (refer samples/policies)
 
 Run this command only the first time after you have cloned the repo.For subsequent times
-use only start and stop commands
+use only start and stop commands given below
 $ docker-compose up -d
 
 test the installation

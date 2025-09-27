@@ -63,9 +63,9 @@
     "rate_limit": true
   },
   "per": 60,
-  "quota_max": 20,
+  "quota_max": 10000,
   "quota_renewal_rate": 86400,
-  "rate": 10,
+  "rate": 50,
   "tags": [
     "security"
   ],
